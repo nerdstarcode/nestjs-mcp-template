@@ -17,7 +17,7 @@ import { ConfigModule } from '@nestjs/config';
     McpModule.forRoot({
       name: 'My MCP Server',
       version: '1.0.0',
-      logging: { level: 'error', enabled: true },
+      logging: { level: 'verbose', enabled: true },
       transports: {
         streamable: { enabled: true }
       },

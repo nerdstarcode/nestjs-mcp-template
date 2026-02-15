@@ -1,13 +1,15 @@
 import { Resolver, Tool, Resource } from '@nestjs-mcp/server';
-import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import type { RequestHandlerExtra } from '@nestjs-mcp/server';
+import type { CallToolResult, ReadResourceResult, ServerRequest } from '@modelcontextprotocol/sdk/types.js';
 import { loadConfig, validateConfig } from '../../@core/modules/postgrees/utils/config.js';
 import { DatabaseConnection } from '../../@core/infrastructure/postgrees/postgrees.infrastructure';
 import { QueryValidator } from '../../@core/modules/postgrees/utils/query-validator.js';
 import type { QueryInput } from '../../@core/dto/postgree';
 import { QueryInputSchema } from '../../@core/dto/postgree';
 import { Logger } from '@nestjs/common';
+import { URL } from 'url';
 
-@Resolver()
+@Resolver('data')
 export class _PostgreeService {
   private readonly logger = new Logger('_PostgreeService');
   private readonly db: DatabaseConnection;
@@ -25,12 +27,13 @@ export class _PostgreeService {
     description:
       'Execute a SQL query against the configured PostgreSQL database. Read-only by default; enable writes via DANGEROUSLY_ALLOW_WRITE_OPS environment variable.',
     paramsSchema: { sql: QueryInputSchema.shape.sql },
-    annotations:{
+    annotations: {
       title: 'PostgreSQL Query',
     }
   })
-  async queryTool(args: unknown): Promise<CallToolResult> {
+  async queryTool(args: unknown, _extra: RequestHandlerExtra): Promise<CallToolResult> {
     try {
+      this.logger.debug(`${_extra.sessionId} Executing query tool with args: ${JSON.stringify(args)}`);
       const input = QueryInputSchema.parse(args) as QueryInput;
       this.queryValidator.validate(input.sql);
       const rows = await this.db.executeQuery(input.sql);
@@ -64,24 +67,25 @@ export class _PostgreeService {
       description: 'List all tables available in the connected PostgreSQL database.',
     }
   })
-  async listTables(): Promise<any> {
+  async listTables(uri: URL, _extra: RequestHandlerExtra): Promise<ReadResourceResult> {
     try {
+      this.logger.debug(`${_extra.sessionId} Fetching table details for ${uri.href}`);
+
       const tables = await this.db.getTables();
       return {
-        content: [
-          {
-            type: 'text',
-            text: JSON.stringify(tables, null, 2),
-          },
-        ],
-      };
+        contents: [{
+          uri: uri.href,
+          mimeType: 'application/json',
+          text: tables ? JSON.stringify(tables) : 'Tables not found',
+        }]
+      }
     } catch (error) {
       this.logger.error('Tables resource error', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to retrieve tables';
       return {
-        content: [
+        contents: [
           {
-            type: 'text',
+            uri: uri.href,
             text: JSON.stringify({ error: errorMessage }, null, 2),
           },
         ],
@@ -91,23 +95,30 @@ export class _PostgreeService {
 
   @Resource({
     name: 'table',
-    uri: 'postgres://table/{schema}/{table}',
+    template: 'postgres://table/{schema}/{table}',
     metadata: {
       title: 'PostgreSQL Table Details',
       description: 'Get schema information and sample rows for a specific table',
     }
   })
-  async getTableDetails(args: { schema: string; table: string }): Promise<any> {
+  async getTableDetails(
+    uri: URL,
+    variables: {
+      schema: unknown, table: unknown;
+    },
+    _extra: RequestHandlerExtra,): Promise<ReadResourceResult> {
     try {
-      const { schema, table } = args;
+      this.logger.debug(`${_extra.sessionId} Fetching table details for ${uri.href}`);
+      const { schema, table } = variables;
       if (!schema || !table) {
         throw new Error('Schema and table parameters are required');
       }
-      const tableDetails = await this.db.getTableDetails(schema, table);
+      const tableDetails = await this.db.getTableDetails(schema as string, table as string);
       return {
-        content: [
+        contents: [
           {
-            type: 'text',
+            uri: uri as any as string,
+            mimeType: 'application/json',
             text: JSON.stringify(tableDetails, null, 2),
           },
         ],
@@ -116,9 +127,10 @@ export class _PostgreeService {
       this.logger.error('Table detail resource error', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to retrieve table details';
       return {
-        content: [
+        contents: [
           {
-            type: 'text',
+            uri: uri as any,
+            mimeType: 'application/json',
             text: JSON.stringify({ error: errorMessage }, null, 2),
           },
         ],
