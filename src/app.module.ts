@@ -3,7 +3,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { _HealthResolverModule } from './modules/_HealthResolver/_HealthResolver.module';
 import { McpModule } from '@nestjs-mcp/server';
-import { _PostgreeModule } from './modules/_postgree/_Postgree.module';
+import { _PostgreeModule } from './modules/_Postgree/_Postgree.module';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
