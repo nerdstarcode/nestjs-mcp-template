@@ -8,9 +8,11 @@ import { ConfigModule } from '@nestjs/config';
 import { ModuleNameController } from './modules/ModuleName/modulename.controller';
 import { RedisModule } from './@core/infrastructure/redis/redis.infrastrucutre.module';
 import { _RedisClientModule } from './modules/_RedisClient/_RedisClient.module';
+import { MetricsGrafanaModule } from './@core/infrastructure/metrics-grafana/metrics-grafana.module';
 
 @Module({
   imports: [
+    MetricsGrafanaModule,
     RedisModule,
     ConfigModule.forRoot({
       isGlobal: true, // Makes the ConfigService available everywhere
