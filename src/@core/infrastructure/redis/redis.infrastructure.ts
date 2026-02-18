@@ -1,60 +1,28 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { ClientProxy, ClientProxyFactory, Transport } from '@nestjs/microservices';
-import z from "zod"
-const logger = new Logger("Redis Infrastructure")
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { ClientProxy, ClientProxyFactory } from '@nestjs/microservices';
+import { getRedisMicroserviceOptions } from './redis.config';
+
+const logger = new Logger('Redis Infrastructure');
 
 @Injectable()
-export class RedisClient {
+export class RedisClient implements OnModuleInit {
   public client: ClientProxy;
-  envSchema = z.object({
-    REDIS_HOST: z.string(),
-    REDIS_PORT: z.coerce.number(),
-    REDIS_PASSWORD: z.string(),
-  })
+
   constructor() {
-    logger.debug("Initializing Redis")
-    this.constructionClient();
-    this.testConnection();
+    logger.debug('Initializing Redis client (producer)');
+    const { transport, options } = getRedisMicroserviceOptions();
+    this.client = ClientProxyFactory.create({
+      transport,
+      options,
+    });
   }
 
-  processOptions() {
-    try {
-      const processEnv = this.envSchema.parse(process.env)
-      return {
-        username: "default",
-        host: processEnv.REDIS_HOST,
-        password: processEnv.REDIS_PASSWORD,
-        port: processEnv.REDIS_PORT,
-      }
-    } catch (err) {
-      logger.error("Error envirement");
-      logger.error(err);
-    }
-  }
-
-  async constructionClient() {
-    try {
-      this.client = ClientProxyFactory.create({
-        transport: Transport.REDIS,
-        options: {
-          name: "Redis Connection",
-          retryAttempts: 10,
-          retryDelay: 3000,
-          ...this.processOptions(),
-        }
-      });
-    } catch (err) {
-      logger.error("Error to connect with Redis");
-      logger.error(err);
-    }
-  }
-
-  async testConnection() {
+  async onModuleInit() {
     try {
       await this.client.connect();
-      logger.log("Successfully connected to Redis.");
+      logger.log('Redis client connected - ready to send messages');
     } catch (err) {
-      logger.error("Failed to connect to Redis during test.");
+      logger.error('Failed to connect Redis client (producer)');
       logger.error(err);
     }
   }

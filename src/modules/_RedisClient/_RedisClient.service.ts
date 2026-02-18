@@ -11,13 +11,6 @@ export class _RedisClientService {
 
   @Tool({ name: 'redis_status', })
   async healthCheck(): Promise<CallToolResult> {
-    try {
-      logger.debug("AAAAAAAAAAAAAAAAAAA")
-      this._redisClient.client.send({ inventory: 'test' }, { test: "teste" })
-      this._redisClient.client.unwrap()
-    } catch (err) {
-      logger.error(err)
-    }
     return {
       content: [
         {

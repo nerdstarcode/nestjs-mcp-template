@@ -1,5 +1,6 @@
-import { Body, Controller, Inject, Logger, Post, Query, Req } from '@nestjs/common';
+import { Body, Controller, Logger, Post, Query, Req } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
+import { firstValueFrom } from 'rxjs';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { RedisClient } from 'src/@core/infrastructure/redis/redis.infrastructure';
 
@@ -13,16 +14,30 @@ const logger = new Logger('Module Name');
   ) { }
 
   @Post('index')
-  async index(@Query('page') page, @Query('limit') limit, @Req() req, @Body() body) {
-    logger.debug(`${req.url} called by ${req.user.email}`);
-    return this._redisClient
-      .client
-      .send({ inventory: 'observation/index' }, { page, limit, body });
+  async index(
+    @Query('page') page: string,
+    @Query('limit') limit: string,
+    @Req() req: { url: string; user?: { email: string } },
+    @Body() body: unknown,
+  ) {
+    logger.debug(`${req.url} called`);
+    return firstValueFrom(
+      this._redisClient.client.send(
+        { inventory: 'observation/index' },
+        { page, limit, body },
+      ),
+    );
   }
 
   @MessagePattern({ inventory: 'test' })
   async test(@Payload() body) {
-    logger.debug("AAAAAAAAAA")
-    console.log(body)
+    logger.debug('MessagePattern test received');
+    return body;
+  }
+
+  @MessagePattern({ inventory: 'observation/index' })
+  async observationIndex(@Payload() payload: { page: string; limit: string; body: unknown }) {
+    logger.debug('MessagePattern observation/index received');
+    return { received: payload };
   }
 }
