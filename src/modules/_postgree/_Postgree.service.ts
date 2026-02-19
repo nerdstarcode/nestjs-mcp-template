@@ -23,7 +23,7 @@ export class _PostgreeService {
   }
 
   @Tool({
-    name: 'query',
+    name: 'postgres_query',
     description:
       'Execute a SQL query against the configured PostgreSQL database. Read-only by default; enable writes via DANGEROUSLY_ALLOW_WRITE_OPS environment variable.',
     paramsSchema: { sql: QueryInputSchema.shape.sql },
@@ -60,7 +60,7 @@ export class _PostgreeService {
   }
 
   @Resource({
-    name: 'tables',
+    name: 'postgres_tables',
     uri: 'postgres://tables',
     metadata: {
       title: 'PostgreSQL Tables',
@@ -94,7 +94,7 @@ export class _PostgreeService {
   }
 
   @Resource({
-    name: 'table',
+    name: 'postgres_table',
     template: 'postgres://table/{schema}/{table}',
     metadata: {
       title: 'PostgreSQL Table Details',
