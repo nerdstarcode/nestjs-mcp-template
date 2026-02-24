@@ -9,7 +9,7 @@ export class _RedisClientService {
     private readonly _redisClient: RedisClient
   ) { }
 
-  @Tool({ name: 'redis_status', })
+  @Tool({ name: 'redis_status', description: 'Check the health status of the Redis connection.' })
   async healthCheck(): Promise<CallToolResult> {
     return {
       content: [

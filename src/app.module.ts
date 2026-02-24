@@ -11,11 +11,14 @@ import { _RedisClientModule } from './modules/_RedisClient/_RedisClient.module';
 import { MetricsGrafanaModule } from './@core/infrastructure/metrics-grafana/metrics-grafana.module';
 import { MongoInfrastructureModule } from './@core/infrastructure/mongo/mongo.infrastructure.module';
 import { TypegooseExampleModule } from './modules/TypegooseExample/typegoose-example.module';
+import { RabbitMQInfrastructureModule } from './@core/infrastructure/rabbitmq/rabbitmq.infrastructure.module';
+import { _RabbitMQClientModule } from './modules/_RabbitMQClient/_RabbitMQClient.module';
 
 @Module({
   imports: [
     MetricsGrafanaModule,
     MongoInfrastructureModule,
+    RabbitMQInfrastructureModule,
     RedisModule,
     ConfigModule.forRoot({
       isGlobal: true,
@@ -23,6 +26,7 @@ import { TypegooseExampleModule } from './modules/TypegooseExample/typegoose-exa
     }),
     _MongoModule,
     _RedisClientModule,
+    _RabbitMQClientModule,
     _HealthResolverModule,
     // _PostgreeModule, // not configured - insecure querys
     TypegooseExampleModule,

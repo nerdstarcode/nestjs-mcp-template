@@ -4,7 +4,7 @@ import * as os from 'os';
 
 @Resolver('data')
 export class _HealthResolverService {
-  @Tool({ name: 'server_health_check', })
+  @Tool({ name: 'server_health_check',  description: 'Check the overall health status of the server.' })
   healthCheck(): CallToolResult {
     return {
       content: [
@@ -16,7 +16,7 @@ export class _HealthResolverService {
     };
   }
 
-  @Tool({ name: 'server_memory_usage', })
+  @Tool({ name: 'server_memory_usage', description: 'Get the current memory usage of the server.' })
   memoryUsage(): CallToolResult {
     const memoryUsage = process.memoryUsage();
     return {
@@ -29,7 +29,7 @@ export class _HealthResolverService {
     };
   }
 
-  @Tool({ name: 'server_cpu_usage', })
+  @Tool({ name: 'server_cpu_usage', description: 'Get the current CPU usage of the server.' })
   cpuUsage(): CallToolResult {
     const cpus = os.cpus();
     const cpuLoad = cpus.map((cpu, index) => {
