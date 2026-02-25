@@ -2,8 +2,10 @@ import { Body, Controller, Logger, Post, Query, Req, Res } from '@nestjs/common'
 import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import type { Response } from 'express';
 import { RedisClient } from 'src/@core/infrastructure/redis/redis.infrastructure';
 import { RabbitMQClient } from 'src/@core/infrastructure/rabbitmq/rabbitmq.infrastructure';
+import { createSuccessResponse, tratativeResponse } from 'src/@core/dto/response.t';
 
 const logger = new Logger('Module Name');
 @Controller('moduleName')
@@ -38,16 +40,17 @@ const logger = new Logger('Module Name');
   }
 
   @Post('test')
-  async test(@Body() body: unknown) {
+  async test(@Body() body: unknown, @Res() res: Response) {
     logger.debug('MessagePattern sending to test_queue');
 
-    return firstValueFrom(this._rabbitMQClient.client.send({ cmd: 'test_queue' }, body || {}));
+    return tratativeResponse(res, await firstValueFrom(this._rabbitMQClient.client.send({ cmd: 'test_queue' }, body || {})));
   }
 
   @EventPattern({ cmd: 'test_queue' })
-  async testQueue(@Payload() payload: { page: string; limit: string; body: unknown }, @Res() res) {
-    logger.debug('MessagePattern test_queue received');
-    return { received: payload };
+  async testQueue(@Payload() payload: { page: string; limit: string; body: unknown }) {
+    logger.debug('MessagePattern test_queue received', payload);
+
+    return createSuccessResponse({ data: { received: payload } });
   }
 
 
