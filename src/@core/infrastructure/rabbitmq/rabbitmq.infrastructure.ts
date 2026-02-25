@@ -1,8 +1,8 @@
-import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ClientProxy, ClientProxyFactory, Transport } from '@nestjs/microservices';
 import { connect, Channel, ChannelModel, } from 'amqplib';
-
+const logger = new Logger('RabbitMQClient');
 @Injectable()
 export class RabbitMQClient implements OnModuleInit, OnModuleDestroy {
   private connection: ChannelModel;
@@ -13,16 +13,17 @@ export class RabbitMQClient implements OnModuleInit, OnModuleDestroy {
 
   async onModuleInit() {
     const url = this.configService.get<string>('rabbitmq.url');
-
+    const queue = this.configService.get<string>('rabbitmq.queue');
     this.connection = await connect(url as string);
     this.channel = await this.connection.createChannel();
-    await this.channel.assertQueue("test_queue", { durable: true });
+    await this.channel.assertQueue(queue as string, { durable: true });
 
-    console.log(`Connected to RabbitMQ at ${url}`);
+    logger.log(`Connected to RabbitMQ at ${url} and asserted queue ${queue}`);
     this.client = ClientProxyFactory.create({
       transport: Transport.RMQ,
       options: {
         urls: [url as string],
+        queue: queue as string,
         queueOptions: {
           durable: true,
         },
@@ -42,18 +43,18 @@ export class RabbitMQClient implements OnModuleInit, OnModuleDestroy {
 
       this.channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
     } catch (error) {
-      console.error('Failed to send message to RabbitMQ:', error);
+      logger.error('Failed to send message to RabbitMQ:', error);
     }
   }
 
   async checkHealth(queue: string): Promise<{ queue: string, messageCount: number, consumerCount: number } | false> {
     try {
       const result = await this.channel.checkQueue(queue);
-      console.log(`Queue: ${queue}, Messages: ${result.messageCount}, Consumers: ${result.consumerCount}`);
+      logger.log(`Queue: ${queue}, Messages: ${result.messageCount}, Consumers: ${result.consumerCount}`);
 
       return result;
     } catch (error) {
-      console.error('RabbitMQ health check failed:', error);
+      logger.error('RabbitMQ health check failed:', error);
       return false;
     }
   }

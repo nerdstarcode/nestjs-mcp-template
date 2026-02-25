@@ -1,5 +1,5 @@
 import { Body, Controller, Logger, Post, Query, Req, Res } from '@nestjs/common';
-import { MessagePattern, Payload } from '@nestjs/microservices';
+import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { RedisClient } from 'src/@core/infrastructure/redis/redis.infrastructure';
@@ -44,7 +44,7 @@ const logger = new Logger('Module Name');
     return firstValueFrom(this._rabbitMQClient.client.send({ cmd: 'test_queue' }, body || {}));
   }
 
-  @MessagePattern({ cmd: 'test_queue' })
+  @EventPattern({ cmd: 'test_queue' })
   async testQueue(@Payload() payload: { page: string; limit: string; body: unknown }, @Res() res) {
     logger.debug('MessagePattern test_queue received');
     return { received: payload };
