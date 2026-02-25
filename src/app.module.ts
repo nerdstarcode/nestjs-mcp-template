@@ -13,25 +13,23 @@ import { MongoInfrastructureModule } from './@core/infrastructure/mongo/mongo.in
 import { TypegooseExampleModule } from './modules/TypegooseExample/typegoose-example.module';
 import { RabbitMQInfrastructureModule } from './@core/infrastructure/rabbitmq/rabbitmq.infrastructure.module';
 import { _RabbitMQClientModule } from './modules/_RabbitMQClient/_RabbitMQClient.module';
-import { ResponseInterceptor } from 'src/@core/interceptors/response.interceptor';
-import { APP_INTERCEPTOR } from '@nestjs/core';
 
 @Module({
   imports: [
     MetricsGrafanaModule,
-    // MongoInfrastructureModule,
+    MongoInfrastructureModule,
     RabbitMQInfrastructureModule,
     RedisModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
     }),
-    // _MongoModule,
+    _MongoModule,
     _RedisClientModule,
     _RabbitMQClientModule,
     _HealthResolverModule,
-    // _PostgreeModule, // 🚧 not configured - 🚨 insecure querys
-    // TypegooseExampleModule,
+    // _PostgreeModule, // 🚧 not configured - 🚨insecure querys
+    TypegooseExampleModule,
     McpModule.forRoot({
       name: 'My MCP Server',
       version: '1.0.0',
@@ -42,12 +40,6 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
     }),
   ],
   controllers: [AppController, ModuleNameController],
-  providers: [
-    AppService,
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: ResponseInterceptor,
-    },
-  ],
+  providers: [AppService],
 })
 export class AppModule { }
