@@ -11,9 +11,16 @@ const logger = new Logger('RABBITMQ CLIENT MCP');
 export class _RabbitMQClientService {
   constructor(private readonly rabbitMQClient: RabbitMQClient) { }
 
-  @Tool({ name: 'rabbitmq_status', description: 'Check the health status of the RabbitMQ connection.' })
-  async healthCheck(): Promise<CallToolResult> {
-    const check = await this.rabbitMQClient.checkHealth();
+  @Tool({
+    name: 'rabbitmq_status',
+    description: 'Check the health status of the RabbitMQ connection.',
+    paramsSchema: z.object({
+      queue: z.string().describe('The message to send to RabbitMQ'),
+    }).shape
+  })
+  async healthCheck(args: unknown): Promise<CallToolResult> {
+    const { queue } = args as any;
+    const check = await this.rabbitMQClient.checkHealth(queue);
     return {
       content: [
         {
@@ -30,19 +37,20 @@ export class _RabbitMQClientService {
       'Send a message to the configured RabbitMQ queue.',
     paramsSchema: z.object({
       message: z.string().describe('The message to send to RabbitMQ'),
+      queue: z.string().describe('The name of the RabbitMQ queue to send the message to'),
     }).shape,
     annotations: {
       title: 'Send Message to RabbitMQ',
     },
   })
   async sendMessage(args: unknown, _extra: RequestHandlerExtra): Promise<CallToolResult> {
-    const { message } = args as any;
-    await this.rabbitMQClient.sendToQueue(message);
+    const { message, queue } = args as any;
+    await this.rabbitMQClient.sendToQueue(queue, message);
     return {
       content: [
         {
           type: 'text',
-          text: `Message sent to RabbitMQ: ${message}`,
+          text: `Message sent to RabbitMQ queue ${queue}: ${message}`,
         },
       ],
     };
