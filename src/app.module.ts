@@ -13,23 +13,25 @@ import { MongoInfrastructureModule } from './@core/infrastructure/mongo/mongo.in
 import { TypegooseExampleModule } from './modules/TypegooseExample/typegoose-example.module';
 import { RabbitMQInfrastructureModule } from './@core/infrastructure/rabbitmq/rabbitmq.infrastructure.module';
 import { _RabbitMQClientModule } from './modules/_RabbitMQClient/_RabbitMQClient.module';
+import { _SurrealDBModule } from './modules/_SurrealDB/_SurrealDB.module';
 
 @Module({
   imports: [
     MetricsGrafanaModule,
-    MongoInfrastructureModule,
+    // MongoInfrastructureModule,
     RabbitMQInfrastructureModule,
     RedisModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
     }),
-    _MongoModule,
+    // _MongoModule,
+    _SurrealDBModule,
     _RedisClientModule,
     _RabbitMQClientModule,
     _HealthResolverModule,
     // _PostgreeModule, // 🚧 not configured - 🚨insecure querys
-    TypegooseExampleModule,
+    // TypegooseExampleModule,
     McpModule.forRoot({
       name: 'My MCP Server',
       version: '1.0.0',
